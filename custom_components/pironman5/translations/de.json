@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pironman 5",
+        "description": "Verbindung zur lokalen Pironman-REST-API konfigurieren.",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Die Pironman-REST-API ist nicht erreichbar.",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten."
+    },
+    "abort": {
+      "already_configured": "Dieses Pironman-Gerät ist bereits eingerichtet."
+    }
+  }
+}
