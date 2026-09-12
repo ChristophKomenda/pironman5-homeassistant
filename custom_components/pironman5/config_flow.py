@@ -36,14 +36,6 @@ class Pironman5ConfigFlow(
                     raise ValueError("Pironman API returned status=false")
 
                 device_info = result.get("data", {})
-                device_id = device_info.get("id", "pironman5")
-
-                await self.async_set_unique_id(device_id)
-
-                # Pironman 5 integration currently represents one
-                # local Pironman device per Home Assistant instance.
-                self._abort_if_unique_id_configured()
-
                 device_name = device_info.get(
                     "name",
                     "Pironman 5",
