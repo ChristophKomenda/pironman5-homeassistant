@@ -1,0 +1,10 @@
+{
+  "domain": "pironman5",
+  "name": "Pironman 5",
+  "version": "1.0.0",
+  "documentation": "https://github.com/ChristophKomenda/pironman5-homeassistant",
+  "requirements": [],
+  "codeowners": ["@ChristophKomenda"],
+  "config_flow": true,
+  "iot_class": "local_polling"
+}
