@@ -4,7 +4,6 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import PironmanCoordinator
 
-
 PLATFORMS = [
     "sensor",
     "binary_sensor",
@@ -13,10 +12,6 @@ PLATFORMS = [
     "number",
 ]
 
-
-async def async_setup(hass: HomeAssistant, config):
-    hass.data.setdefault(DOMAIN, {})
-    return True
 
 
 async def async_setup_entry(
