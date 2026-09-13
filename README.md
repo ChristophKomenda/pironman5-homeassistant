@@ -40,6 +40,7 @@ The integration communicates directly with the local Pironman REST API. No MQTT 
 * Home Assistant
 * SunFounder Pironman 5 or Pironman 5 Max
 * Pironman software with the local REST API
+* Prerequisite: Pironman 5 must have its local Dashboard/API running on port 34001.
 
 The integration communicates with the local Pironman API on port `34001` by default.
 
