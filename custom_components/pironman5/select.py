@@ -13,6 +13,14 @@ FAN_MODES = {
 }
 
 
+OLED_PAGES = {
+    "Mix": "mix",
+    "Performance": "performance",
+    "IPs": "ips",
+    "Disk": "disk",
+}
+
+
 async def async_setup_entry(
     hass,
     entry,
@@ -29,6 +37,26 @@ async def async_setup_entry(
             PironmanOLEDRotation(
                 coordinator,
                 entry.entry_id,
+            ),
+            PironmanOLEDPage(
+                coordinator,
+                entry.entry_id,
+                1,
+            ),
+            PironmanOLEDPage(
+                coordinator,
+                entry.entry_id,
+                2,
+            ),
+            PironmanOLEDPage(
+                coordinator,
+                entry.entry_id,
+                3,
+            ),
+            PironmanOLEDPage(
+                coordinator,
+                entry.entry_id,
+                4,
             ),
         ]
     )
@@ -110,4 +138,98 @@ class PironmanOLEDRotation(SelectEntity):
         await self.oled.set_rotation(
             int(option.rstrip("°"))
         )
+        await self.coordinator.async_request_refresh()
+
+
+class PironmanOLEDPage(SelectEntity):
+    """Represent one page in the Pironman OLED page sequence."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:monitor-dashboard"
+
+    def __init__(
+        self,
+        coordinator,
+        entry_id,
+        page_number,
+    ):
+        self.coordinator = coordinator
+        self.oled = PironmanOLED(coordinator)
+        self.page_number = page_number
+        self._attr_name = f"OLED Page {page_number}"
+        self._attr_unique_id = (
+            f"{entry_id}_oled_page_{page_number}"
+        )
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.host)},
+            "name": "Pironman 5 Max",
+            "manufacturer": "SunFounder",
+            "model": "Pironman 5 Max",
+        }
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.last_update_success
+
+    @property
+    def current_option(self):
+        pages = self.coordinator.data.get(
+            "oled_pages",
+            ["mix", "performance", "ips", "disk"],
+        )
+
+        index = self.page_number - 1
+
+        if index >= len(pages):
+            return None
+
+        page = pages[index]
+
+        reverse = {
+            value: key
+            for key, value in OLED_PAGES.items()
+        }
+
+        return reverse.get(page)
+
+    @property
+    def options(self):
+        pages = self.coordinator.data.get(
+            "oled_pages",
+            ["mix", "performance", "ips", "disk"],
+        )
+
+        current_page = self.current_option
+
+        used_pages = {
+            page
+            for page in pages
+            if page != OLED_PAGES.get(current_page)
+        }
+
+        return [
+            page
+            for page, value in OLED_PAGES.items()
+            if value not in used_pages
+        ]
+
+    async def async_select_option(self, option):
+        pages = list(
+            self.coordinator.data.get(
+                "oled_pages",
+                ["mix", "performance", "ips", "disk"],
+            )
+        )
+
+        index = self.page_number - 1
+
+        if index >= len(pages):
+            return
+
+        pages[index] = OLED_PAGES[option]
+
+        await self.oled.set_pages(pages)
         await self.coordinator.async_request_refresh()
