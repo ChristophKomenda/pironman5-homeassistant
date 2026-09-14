@@ -8,42 +8,51 @@ The integration communicates directly with the local Pironman REST API. **No MQT
 
 ### Monitoring
 
-* CPU temperature
-* GPU temperature
-* CPU usage
-* CPU frequency
-* Memory usage
-* Memory used
-* NVMe usage
-* Network download speed
-* Network upload speed
-* Fan speed
-* Fan running status
+- CPU temperature
+- GPU temperature
+- CPU usage
+- CPU frequency
+- Memory usage
+- Memory used
+- NVMe usage
+- Network download speed
+- Network upload speed
+- Fan speed
+- Fan running status
 
 ### Fan Control
 
-* Fan mode
+- Fan mode
+  - Always On
+  - Performance
+  - Cool
+  - Balanced
+  - Quiet
+- GPIO fan LED
+  - On
+  - Off
+  - Follow
 
-  * Always On
-  * Performance
-  * Cool
-  * Balanced
-  * Quiet
-* GPIO fan LED
-
-  * On
-  * Off
-  * Follow
-
-The GPIO fan LED can be controlled directly through Home Assistant using the Pironman local REST API.
+The GPIO fan LED can be controlled directly through Home Assistant using the local Pironman REST API.
 
 ### RGB Control
 
-* RGB on/off
-* RGB brightness
-* RGB color
-* RGB effects
-* RGB effect speed
+- RGB on/off
+- RGB brightness
+- RGB color
+- RGB effect selection
+  - Solid
+  - Breathing
+  - Flow
+  - Flow Reverse
+  - Rainbow
+  - Rainbow Reverse
+  - Hue Cycle
+- RGB effect speed
+
+The RGB effects can be controlled through the RGB Light entity or through a dedicated **RGB Effect** select entity.
+
+The dedicated RGB Effect selector makes it easy to use RGB effects in Home Assistant dashboards and automations.
 
 ### OLED
 
@@ -51,21 +60,25 @@ The integration provides local control of the **Pironman 5 Max OLED display**.
 
 Currently supported:
 
-* Enable / disable OLED display
-* OLED rotation (0° / 180°)
-* OLED sleep timeout
-* OLED page selection
-* Local control through Home Assistant
-* Automatic state synchronization with the Pironman API
+- Enable / disable OLED display
+- OLED rotation (0° / 180°)
+- OLED sleep timeout
+- OLED page selection
+  - Mix
+  - Performance
+  - IPs
+  - Disk
+- Local control through Home Assistant
+- Automatic state synchronization with the Pironman API
 
 The OLED page selector controls the primary OLED page directly from Home Assistant.
 
 ## Requirements
 
-* Home Assistant
-* SunFounder Pironman 5 or Pironman 5 Max
-* Pironman software with the local REST API
-* Pironman Dashboard/API running on port `34001`
+- Home Assistant
+- SunFounder Pironman 5 or Pironman 5 Max
+- Pironman software with the local REST API
+- Pironman Dashboard/API running on port `34001`
 
 The integration communicates with the local Pironman API on port `34001` by default.
 
@@ -79,142 +92,3 @@ If the repository is not yet available in the default HACS store, add this repos
 
 ```text
 https://github.com/ChristophKomenda/pironman5-homeassistant
-```
-
-Select **Integration** as the repository type.
-
-After installation:
-
-1. Restart Home Assistant.
-2. Go to **Settings → Devices & services**.
-3. Select **Add Integration**.
-4. Search for **Pironman 5**.
-5. Enter the Pironman API host and port.
-
-### Manual installation
-
-Copy the `pironman5` directory into:
-
-```text
-/config/custom_components/pironman5
-```
-
-Restart Home Assistant and add the integration through **Settings → Devices & services**.
-
-## Configuration
-
-The integration provides a configuration flow where the Pironman API host and port can be configured.
-
-Default configuration:
-
-```text
-Host: 127.0.0.1
-Port: 34001
-```
-
-For a Home Assistant Container installation using host networking, `127.0.0.1:34001` can be used when the Pironman service is running directly on the Raspberry Pi host.
-
-For Home Assistant installations where the Pironman service runs on another device, enter the IP address of that device instead.
-
-## Local API
-
-The integration uses the Pironman local REST API:
-
-```text
-http://<host>:34001/api/v1.0/
-```
-
-No cloud connection is required.
-
-### Fan LED
-
-The GPIO fan LED is controlled through:
-
-```text
-POST /api/v1.0/set-fan-led
-```
-
-Supported values:
-
-```json
-{
-  "led": "on"
-}
-```
-
-```json
-{
-  "led": "off"
-}
-```
-
-```json
-{
-  "led": "follow"
-}
-```
-
-### Fan Mode
-
-Fan mode is controlled through:
-
-```text
-POST /api/v1.0/set-fan-mode
-```
-
-## Supported Hardware
-
-Currently tested with:
-
-* **SunFounder Pironman 5 Max**
-
-Other Pironman 5 variants may work if they provide the same REST API.
-
-## Troubleshooting
-
-### The integration cannot connect
-
-Check that the Pironman service is running:
-
-```bash
-systemctl status pironman5
-```
-
-You can also test the API directly:
-
-```bash
-curl http://127.0.0.1:34001/api/v1.0/get-data
-```
-
-A successful response should contain:
-
-```json
-{
-  "status": true
-}
-```
-
-### Fan LED control does not work
-
-Make sure the Pironman GPIO fan LED is available and that the Pironman service is running.
-
-The Pironman configuration can be checked with:
-
-```bash
-curl -s http://127.0.0.1:34001/api/v1.0/get-config | python3 -m json.tool
-```
-
-The relevant configuration values are:
-
-```text
-gpio_fan_led
-gpio_fan_led_pin
-```
-
-### RGB control does not work
-
-Make sure RGB is enabled in the Pironman configuration and that the Pironman service is running.
-
-## License
-
-MIT License
