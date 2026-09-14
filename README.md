@@ -44,10 +44,11 @@ Currently supported:
 - Enable / disable OLED display
 - OLED rotation (0° / 180°)
 - OLED sleep timeout
+- OLED page selection
 - Local control through Home Assistant
 - Automatic state synchronization with the Pironman API
 
-OLED page configuration is currently managed by the Pironman software.
+The OLED page selector controls the primary OLED page directly from Home Assistant.
 
 ## Requirements
 
