@@ -63,11 +63,17 @@ async def async_setup_entry(
 
 
 class PironmanFanMode(SelectEntity):
+    """Represent the Pironman fan mode."""
+
     _attr_name = "Fan Mode"
     _attr_has_entity_name = True
     _attr_options = list(FAN_MODES.keys())
 
-    def __init__(self, coordinator, entry_id):
+    def __init__(
+        self,
+        coordinator,
+        entry_id,
+    ):
         self.coordinator = coordinator
         self._attr_unique_id = f"{entry_id}_fan_mode"
 
@@ -95,7 +101,7 @@ class PironmanFanMode(SelectEntity):
         await self.coordinator.post(
             "set-fan-mode",
             {
-                "fan_mode": FAN_MODES[option]
+                "fan_mode": FAN_MODES[option],
             },
         )
 
@@ -108,7 +114,11 @@ class PironmanOLEDRotation(SelectEntity):
     _attr_options = ["0°", "180°"]
     _attr_icon = "mdi:rotate-3d-variant"
 
-    def __init__(self, coordinator, entry_id):
+    def __init__(
+        self,
+        coordinator,
+        entry_id,
+    ):
         self.coordinator = coordinator
         self.oled = PironmanOLED(coordinator)
         self._attr_unique_id = f"{entry_id}_oled_rotation"
@@ -128,6 +138,7 @@ class PironmanOLEDRotation(SelectEntity):
             "oled_rotation",
             0,
         )
+
         return f"{rotation}°"
 
     @property
@@ -138,6 +149,7 @@ class PironmanOLEDRotation(SelectEntity):
         await self.oled.set_rotation(
             int(option.rstrip("°"))
         )
+
         await self.coordinator.async_request_refresh()
 
 
@@ -146,6 +158,7 @@ class PironmanOLEDPage(SelectEntity):
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:monitor-dashboard"
+    _attr_options = list(OLED_PAGES.keys())
 
     def __init__(
         self,
@@ -156,7 +169,9 @@ class PironmanOLEDPage(SelectEntity):
         self.coordinator = coordinator
         self.oled = PironmanOLED(coordinator)
         self.page_number = page_number
+
         self._attr_name = f"OLED Page {page_number}"
+
         self._attr_unique_id = (
             f"{entry_id}_oled_page_{page_number}"
         )
@@ -178,7 +193,12 @@ class PironmanOLEDPage(SelectEntity):
     def current_option(self):
         pages = self.coordinator.data.get(
             "oled_pages",
-            ["mix", "performance", "ips", "disk"],
+            [
+                "mix",
+                "performance",
+                "ips",
+                "disk",
+            ],
         )
 
         index = self.page_number - 1
@@ -195,32 +215,16 @@ class PironmanOLEDPage(SelectEntity):
 
         return reverse.get(page)
 
-    @property
-    def options(self):
-        pages = self.coordinator.data.get(
-            "oled_pages",
-            ["mix", "performance", "ips", "disk"],
-        )
-
-        current_page = self.current_option
-
-        used_pages = {
-            page
-            for page in pages
-            if page != OLED_PAGES.get(current_page)
-        }
-
-        return [
-            page
-            for page, value in OLED_PAGES.items()
-            if value not in used_pages
-        ]
-
     async def async_select_option(self, option):
         pages = list(
             self.coordinator.data.get(
                 "oled_pages",
-                ["mix", "performance", "ips", "disk"],
+                [
+                    "mix",
+                    "performance",
+                    "ips",
+                    "disk",
+                ],
             )
         )
 
@@ -232,4 +236,5 @@ class PironmanOLEDPage(SelectEntity):
         pages[index] = OLED_PAGES[option]
 
         await self.oled.set_pages(pages)
+
         await self.coordinator.async_request_refresh()
