@@ -19,6 +19,16 @@ GPIO_FAN_LED_MODES = {
     "Follow": "follow",
 }
 
+RGB_EFFECTS = {
+    "Solid": "solid",
+    "Breathing": "breathing",
+    "Flow": "flow",
+    "Flow Reverse": "flow_reverse",
+    "Rainbow": "rainbow",
+    "Rainbow Reverse": "rainbow_reverse",
+    "Hue Cycle": "hue_cycle",
+}
+
 
 OLED_PAGES = {
     "Mix": "mix",
@@ -42,6 +52,10 @@ async def async_setup_entry(
                 entry.entry_id,
             ),
             PironmanGPIOFanLED(
+                coordinator,
+                entry.entry_id,
+            ),
+            PironmanRGBEffect(
                 coordinator,
                 entry.entry_id,
             ),
@@ -148,6 +162,55 @@ class PironmanGPIOFanLED(SelectEntity):
                 "led": GPIO_FAN_LED_MODES[option],
             },
         )
+
+
+class PironmanRGBEffect(SelectEntity):
+    """Represent the RGB effect."""
+
+    _attr_name = "RGB Effect"
+    _attr_has_entity_name = True
+    _attr_options = list(RGB_EFFECTS.keys())
+    _attr_icon = "mdi:palette"
+
+    def __init__(
+        self,
+        coordinator,
+        entry_id,
+    ):
+        self.coordinator = coordinator
+        self._attr_unique_id = f"{entry_id}_rgb_effect"
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.host)},
+            "name": "Pironman 5 Max",
+            "manufacturer": "SunFounder",
+            "model": "Pironman 5 Max",
+        }
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.last_update_success
+
+    @property
+    def current_option(self):
+        style = self.coordinator.data.get("rgb_style")
+        reverse = {
+            value: key
+            for key, value in RGB_EFFECTS.items()
+        }
+        return reverse.get(style)
+
+    async def async_select_option(self, option):
+        await self.coordinator.post(
+            "set-rgb-style",
+            {
+                "style": RGB_EFFECTS[option],
+            },
+        )
+
+        await self.coordinator.async_request_refresh()
 
 
 class PironmanOLEDRotation(SelectEntity):
