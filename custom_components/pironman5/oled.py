@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class PironmanOLED:
-    """Provide a small abstraction for Pironman OLED configuration."""
+    """Provide a small abstraction for Pironman OLED control."""
 
     def __init__(self, coordinator: PironmanCoordinator) -> None:
         self.coordinator = coordinator
@@ -17,8 +17,8 @@ class PironmanOLED:
     async def set_enabled(self, enabled: bool):
         """Enable or disable the OLED display."""
         return await self.coordinator.post(
-            "set-config",
-            {"data": {"system": {"oled_enable": enabled}}},
+            "set-oled-enable",
+            {"enable": enabled},
         )
 
     async def set_rotation(self, rotation: int):
@@ -27,15 +27,15 @@ class PironmanOLED:
             raise ValueError("OLED rotation must be 0 or 180")
 
         return await self.coordinator.post(
-            "set-config",
-            {"data": {"system": {"oled_rotation": rotation}}},
+            "set-oled-rotation",
+            {"rotation": rotation},
         )
 
     async def set_pages(self, pages: list[str]):
         """Set the OLED page sequence."""
         return await self.coordinator.post(
-            "set-config",
-            {"data": {"system": {"oled_pages": pages}}},
+            "set-oled-pages",
+            {"pages": pages},
         )
 
     async def set_sleep_timeout(self, timeout: int):
@@ -44,6 +44,6 @@ class PironmanOLED:
             raise ValueError("OLED sleep timeout must be 0 or greater")
 
         return await self.coordinator.post(
-            "set-config",
-            {"data": {"system": {"oled_sleep_timeout": timeout}}},
+            "set-oled-sleep-timeout",
+            {"timeout": timeout},
         )

@@ -10,6 +10,7 @@ PLATFORMS = [
     "select",
     "light",
     "number",
+    "switch",
 ]
 
 
