@@ -41,22 +41,6 @@ async def async_setup_entry(
             PironmanOLEDPage(
                 coordinator,
                 entry.entry_id,
-                1,
-            ),
-            PironmanOLEDPage(
-                coordinator,
-                entry.entry_id,
-                2,
-            ),
-            PironmanOLEDPage(
-                coordinator,
-                entry.entry_id,
-                3,
-            ),
-            PironmanOLEDPage(
-                coordinator,
-                entry.entry_id,
-                4,
             ),
         ]
     )
@@ -154,27 +138,21 @@ class PironmanOLEDRotation(SelectEntity):
 
 
 class PironmanOLEDPage(SelectEntity):
-    """Represent one page in the Pironman OLED page sequence."""
+    """Represent the primary Pironman OLED page."""
 
+    _attr_name = "OLED Page"
     _attr_has_entity_name = True
-    _attr_icon = "mdi:monitor-dashboard"
     _attr_options = list(OLED_PAGES.keys())
+    _attr_icon = "mdi:monitor-dashboard"
 
     def __init__(
         self,
         coordinator,
         entry_id,
-        page_number,
     ):
         self.coordinator = coordinator
         self.oled = PironmanOLED(coordinator)
-        self.page_number = page_number
-
-        self._attr_name = f"OLED Page {page_number}"
-
-        self._attr_unique_id = (
-            f"{entry_id}_oled_page_{page_number}"
-        )
+        self._attr_unique_id = f"{entry_id}_oled_page"
 
     @property
     def device_info(self):
@@ -201,12 +179,10 @@ class PironmanOLEDPage(SelectEntity):
             ],
         )
 
-        index = self.page_number - 1
-
-        if index >= len(pages):
+        if not pages:
             return None
 
-        page = pages[index]
+        page = pages[0]
 
         reverse = {
             value: key
@@ -228,12 +204,15 @@ class PironmanOLEDPage(SelectEntity):
             )
         )
 
-        index = self.page_number - 1
+        if not pages:
+            pages = [
+                "mix",
+                "performance",
+                "ips",
+                "disk",
+            ]
 
-        if index >= len(pages):
-            return
-
-        pages[index] = OLED_PAGES[option]
+        pages[0] = OLED_PAGES[option]
 
         await self.oled.set_pages(pages)
 
