@@ -35,6 +35,18 @@ The integration communicates directly with the local Pironman REST API. No MQTT 
 * RGB effects
 * RGB effect speed
 
+### OLED
+
+The integration provides local control of the Pironman 5 Max OLED display.
+
+Currently supported:
+
+- Enable / disable OLED display
+- Local control through Home Assistant
+- Automatic state synchronization with the Pironman API
+
+More OLED controls such as page selection, rotation and sleep timeout can be added incrementally.
+
 ## Requirements
 
 * Home Assistant
