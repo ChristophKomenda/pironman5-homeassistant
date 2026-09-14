@@ -13,6 +13,13 @@ FAN_MODES = {
 }
 
 
+GPIO_FAN_LED_MODES = {
+    "On": "on",
+    "Off": "off",
+    "Follow": "follow",
+}
+
+
 OLED_PAGES = {
     "Mix": "mix",
     "Performance": "performance",
@@ -31,6 +38,10 @@ async def async_setup_entry(
     async_add_entities(
         [
             PironmanFanMode(
+                coordinator,
+                entry.entry_id,
+            ),
+            PironmanGPIOFanLED(
                 coordinator,
                 entry.entry_id,
             ),
@@ -86,6 +97,55 @@ class PironmanFanMode(SelectEntity):
             "set-fan-mode",
             {
                 "fan_mode": FAN_MODES[option],
+            },
+        )
+
+
+class PironmanGPIOFanLED(SelectEntity):
+    """Represent the GPIO fan LED."""
+
+    _attr_name = "GPIO Fan LED"
+    _attr_has_entity_name = True
+    _attr_options = list(GPIO_FAN_LED_MODES.keys())
+    _attr_icon = "mdi:led-on"
+
+    def __init__(
+        self,
+        coordinator,
+        entry_id,
+    ):
+        self.coordinator = coordinator
+        self._attr_unique_id = f"{entry_id}_gpio_fan_led"
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.host)},
+            "name": "Pironman 5 Max",
+            "manufacturer": "SunFounder",
+            "model": "Pironman 5 Max",
+        }
+
+    @property
+    def current_option(self):
+        led = self.coordinator.data.get("gpio_fan_led")
+
+        reverse = {
+            value: key
+            for key, value in GPIO_FAN_LED_MODES.items()
+        }
+
+        return reverse.get(led)
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.last_update_success
+
+    async def async_select_option(self, option):
+        await self.coordinator.post(
+            "set-fan-led",
+            {
+                "led": GPIO_FAN_LED_MODES[option],
             },
         )
 
