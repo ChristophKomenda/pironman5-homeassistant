@@ -47,7 +47,7 @@ Currently supported:
 - Local control through Home Assistant
 - Automatic state synchronization with the Pironman API
 
-OLED page configuration can be added incrementally.
+OLED page configuration is currently managed by the Pironman software.
 
 ## Requirements
 
