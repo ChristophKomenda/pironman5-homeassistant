@@ -42,10 +42,12 @@ The integration provides local control of the Pironman 5 Max OLED display.
 Currently supported:
 
 - Enable / disable OLED display
+- OLED rotation (0° / 180°)
+- OLED sleep timeout
 - Local control through Home Assistant
 - Automatic state synchronization with the Pironman API
 
-More OLED controls such as page selection, rotation and sleep timeout can be added incrementally.
+OLED page configuration can be added incrementally.
 
 ## Requirements
 
