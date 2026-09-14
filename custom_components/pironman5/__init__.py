@@ -19,6 +19,8 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
 ):
+    hass.data.setdefault(DOMAIN, {})
+
     coordinator = PironmanCoordinator(
         hass,
         entry.data["host"],
