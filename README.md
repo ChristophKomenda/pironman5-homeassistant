@@ -1,4 +1,4 @@
-# Pironman 5 Home Assistant
+# Pironman 5 Home Assistant Container
 
 A local Home Assistant custom integration for the **SunFounder Pironman 5 and Pironman 5 Max**.
 
