@@ -4,6 +4,8 @@ A local Home Assistant custom integration for the **SunFounder Pironman 5 and Pi
 
 The integration communicates directly with the local Pironman REST API. **No MQTT broker, cloud service or additional software is required.**
 
+This project provides a local workaround for **Home Assistant Container** installations, where the official SunFounder Home Assistant integration currently does not support the required functionality.
+
 ## Features
 
 ### Monitoring
