@@ -6,6 +6,13 @@ The integration communicates directly with the local Pironman REST API. **No MQT
 
 This project provides a local workaround for **Home Assistant Container** installations, where the official SunFounder Home Assistant integration currently does not support the required functionality.
 
+
+> 🧩 **HACS submission pending**
+> This integration has been submitted to the official HACS default repository and is currently awaiting review.
+>
+> **[View HACS Pull Request #10913 →](https://github.com/hacs/default/pull/10913)**
+
+
 ## Features
 
 ### Monitoring
