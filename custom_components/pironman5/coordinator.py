@@ -1,33 +1,107 @@
 from datetime import timedelta
 import logging
+from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import API_PATH, DEFAULT_SCAN_INTERVAL
+from .const import API_PATH, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class PironmanCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass, host, port):
-        self.hass = hass
+class PironmanCoordinator(
+    DataUpdateCoordinator[dict[str, Any]]
+):
+    """Coordinator for the Pironman 5 API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        host: str,
+        port: int,
+    ) -> None:
+        """Initialize the Pironman coordinator."""
         self.host = host
         self.port = port
         self.base_url = f"http://{host}:{port}{API_PATH}"
         self.session = async_get_clientsession(hass)
 
+        self.device_info_data: dict[str, Any] = {}
+
         super().__init__(
             hass,
             _LOGGER,
             name="Pironman 5",
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            config_entry=config_entry,
+            update_interval=timedelta(
+                seconds=DEFAULT_SCAN_INTERVAL
+            ),
         )
 
-    async def _async_update_data(self):
+    async def _async_setup(self) -> None:
+        """Fetch static device information."""
+        await self.async_get_device_info()
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        info = self.device_info_data
+
+        name = info.get(
+            "name",
+            "Pironman 5",
+        )
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.host)},
+            name=name,
+            manufacturer="SunFounder",
+            model=name,
+            sw_version=info.get("version"),
+        )
+
+    async def async_get_device_info(
+        self,
+    ) -> dict[str, Any]:
+        """Fetch static device information."""
+        try:
+            async with self.session.get(
+                f"{self.base_url}/get-device-info",
+                timeout=5,
+            ) as response:
+                response.raise_for_status()
+                result = await response.json()
+
+            if not result.get("status"):
+                raise UpdateFailed(
+                    "Pironman API returned status=false "
+                    "for get-device-info"
+                )
+
+            self.device_info_data = result.get(
+                "data",
+                {},
+            )
+
+            return self.device_info_data
+
+        except Exception as err:
+            raise UpdateFailed(
+                f"Unable to get Pironman device information: {err}"
+            ) from err
+
+    async def _async_update_data(
+        self,
+    ) -> dict[str, Any]:
+        """Fetch current Pironman data."""
         try:
             async with self.session.get(
                 f"{self.base_url}/get-data",
@@ -45,16 +119,28 @@ class PironmanCoordinator(DataUpdateCoordinator):
 
             if not data_result.get("status"):
                 raise UpdateFailed(
-                    "Pironman API returned status=false for get-data"
+                    "Pironman API returned status=false "
+                    "for get-data"
                 )
 
             if not config_result.get("status"):
                 raise UpdateFailed(
-                    "Pironman API returned status=false for get-config"
+                    "Pironman API returned status=false "
+                    "for get-config"
                 )
 
-            data = data_result.get("data", {})
-            config = config_result.get("data", {}).get("system", {})
+            data = data_result.get(
+                "data",
+                {},
+            )
+
+            config = config_result.get(
+                "data",
+                {},
+            ).get(
+                "system",
+                {},
+            )
 
             return {
                 **data,
@@ -66,7 +152,12 @@ class PironmanCoordinator(DataUpdateCoordinator):
                 f"Unable to communicate with Pironman API: {err}"
             ) from err
 
-    async def post(self, endpoint, payload):
+    async def post(
+        self,
+        endpoint: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Send a command to the Pironman API."""
         url = f"{self.base_url}/{endpoint}"
 
         try:

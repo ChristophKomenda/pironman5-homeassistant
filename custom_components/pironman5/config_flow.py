@@ -7,6 +7,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import API_PATH, DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -16,7 +17,10 @@ class Pironman5ConfigFlow(
 ):
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self,
+        user_input=None,
+    ):
         errors = {}
 
         if user_input is not None:
@@ -33,13 +37,22 @@ class Pironman5ConfigFlow(
                         result = await response.json()
 
                 if not result.get("status"):
-                    raise ValueError("Pironman API returned status=false")
+                    raise ValueError(
+                        "Pironman API returned status=false"
+                    )
 
-                device_info = result.get("data", {})
+                device_info = result.get(
+                    "data",
+                    {},
+                )
+
                 device_name = device_info.get(
                     "name",
                     "Pironman 5",
                 )
+
+                await self.async_set_unique_id(host)
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
                     title=device_name,
@@ -74,7 +87,10 @@ class Pironman5ConfigFlow(
                     default=DEFAULT_PORT,
                 ): vol.All(
                     int,
-                    vol.Range(min=1, max=65535),
+                    vol.Range(
+                        min=1,
+                        max=65535,
+                    ),
                 ),
             }
         )

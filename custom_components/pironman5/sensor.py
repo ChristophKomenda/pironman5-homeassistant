@@ -1,17 +1,18 @@
 from homeassistant.components.sensor import (
-    SensorEntity,
     SensorDeviceClass,
-)
-from homeassistant.const import (
-    PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfFrequency,
-    UnitOfInformation,
-    UnitOfDataRate,
+    SensorEntity,
 )
 
-from .const import DOMAIN
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfDataRate,
+    UnitOfFrequency,
+    UnitOfInformation,
+    UnitOfTemperature,
+)
+
 from .coordinator import PironmanCoordinator
+from .entity import PironmanEntity
 
 
 SENSORS = [
@@ -93,7 +94,7 @@ async def async_setup_entry(
     entry,
     async_add_entities,
 ):
-    coordinator: PironmanCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: PironmanCoordinator = entry.runtime_data
 
     entities = []
 
@@ -113,7 +114,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PironmanSensor(SensorEntity):
+class PironmanSensor(PironmanEntity, SensorEntity):
     def __init__(
         self,
         coordinator,
@@ -124,7 +125,8 @@ class PironmanSensor(SensorEntity):
         unit,
         data_key,
     ):
-        self.coordinator = coordinator
+        super().__init__(coordinator)
+
         self._attr_name = name
         self._attr_unique_id = f"{entry_id}_{key}"
         self._attr_device_class = device_class
@@ -133,21 +135,8 @@ class PironmanSensor(SensorEntity):
         self._attr_has_entity_name = True
 
     @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "Pironman 5 Max",
-            "manufacturer": "SunFounder",
-            "model": "Pironman 5 Max",
-        }
-
-    @property
     def native_value(self):
-        return self.coordinator.data.get(self._data_key)
+        return self.coordinator.data.get(
+            self._data_key
+        )
 
-    @property
-    def available(self):
-        return self.coordinator.last_update_success
-
-    async def async_update(self):
-        await self.coordinator.async_request_refresh()
