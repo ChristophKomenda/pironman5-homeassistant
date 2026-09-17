@@ -1,9 +1,9 @@
 from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
     BinarySensorDeviceClass,
+    BinarySensorEntity,
 )
 
-from .const import DOMAIN
+from .entity import PironmanEntity
 
 
 async def async_setup_entry(
@@ -11,7 +11,7 @@ async def async_setup_entry(
     entry,
     async_add_entities,
 ):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [
@@ -23,30 +23,25 @@ async def async_setup_entry(
     )
 
 
-class PironmanFanState(BinarySensorEntity):
+class PironmanFanState(PironmanEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_name = "Fan Running"
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, entry_id):
-        self.coordinator = coordinator
-        self._attr_unique_id = f"{entry_id}_fan_running"
+    def __init__(
+        self,
+        coordinator,
+        entry_id,
+    ):
+        super().__init__(coordinator)
 
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "Pironman 5 Max",
-            "manufacturer": "SunFounder",
-            "model": "Pironman 5 Max",
-        }
+        self._attr_unique_id = f"{entry_id}_fan_running"
 
     @property
     def is_on(self):
         return bool(
-            self.coordinator.data.get("gpio_fan_state", 0)
+            self.coordinator.data.get(
+                "gpio_fan_state",
+                0,
+            )
         )
-
-    @property
-    def available(self):
-        return self.coordinator.last_update_success

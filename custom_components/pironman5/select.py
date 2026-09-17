@@ -1,6 +1,6 @@
 from homeassistant.components.select import SelectEntity
 
-from .const import DOMAIN
+from .entity import PironmanEntity
 from .oled import PironmanOLED
 
 
@@ -18,6 +18,7 @@ GPIO_FAN_LED_MODES = {
     "Off": "off",
     "Follow": "follow",
 }
+
 
 RGB_EFFECTS = {
     "Solid": "solid",
@@ -43,7 +44,7 @@ async def async_setup_entry(
     entry,
     async_add_entities,
 ):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [
@@ -71,9 +72,7 @@ async def async_setup_entry(
     )
 
 
-class PironmanFanMode(SelectEntity):
-    """Represent the Pironman fan mode."""
-
+class PironmanFanMode(PironmanEntity, SelectEntity):
     _attr_name = "Fan Mode"
     _attr_has_entity_name = True
     _attr_options = list(FAN_MODES.keys())
@@ -83,21 +82,15 @@ class PironmanFanMode(SelectEntity):
         coordinator,
         entry_id,
     ):
-        self.coordinator = coordinator
+        super().__init__(coordinator)
+
         self._attr_unique_id = f"{entry_id}_fan_mode"
 
     @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "Pironman 5 Max",
-            "manufacturer": "SunFounder",
-            "model": "Pironman 5 Max",
-        }
-
-    @property
     def current_option(self):
-        mode = self.coordinator.data.get("gpio_fan_mode")
+        mode = self.coordinator.data.get(
+            "gpio_fan_mode"
+        )
 
         reverse = {
             value: key
@@ -109,15 +102,11 @@ class PironmanFanMode(SelectEntity):
     async def async_select_option(self, option):
         await self.coordinator.post(
             "set-fan-mode",
-            {
-                "fan_mode": FAN_MODES[option],
-            },
+            {"fan_mode": FAN_MODES[option]},
         )
 
 
-class PironmanGPIOFanLED(SelectEntity):
-    """Represent the GPIO fan LED."""
-
+class PironmanGPIOFanLED(PironmanEntity, SelectEntity):
     _attr_name = "GPIO Fan LED"
     _attr_has_entity_name = True
     _attr_options = list(GPIO_FAN_LED_MODES.keys())
@@ -128,21 +117,15 @@ class PironmanGPIOFanLED(SelectEntity):
         coordinator,
         entry_id,
     ):
-        self.coordinator = coordinator
+        super().__init__(coordinator)
+
         self._attr_unique_id = f"{entry_id}_gpio_fan_led"
 
     @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "Pironman 5 Max",
-            "manufacturer": "SunFounder",
-            "model": "Pironman 5 Max",
-        }
-
-    @property
     def current_option(self):
-        led = self.coordinator.data.get("gpio_fan_led")
+        led = self.coordinator.data.get(
+            "gpio_fan_led"
+        )
 
         reverse = {
             value: key
@@ -151,22 +134,14 @@ class PironmanGPIOFanLED(SelectEntity):
 
         return reverse.get(led)
 
-    @property
-    def available(self) -> bool:
-        return self.coordinator.last_update_success
-
     async def async_select_option(self, option):
         await self.coordinator.post(
             "set-fan-led",
-            {
-                "led": GPIO_FAN_LED_MODES[option],
-            },
+            {"led": GPIO_FAN_LED_MODES[option]},
         )
 
 
-class PironmanRGBEffect(SelectEntity):
-    """Represent the RGB effect."""
-
+class PironmanRGBEffect(PironmanEntity, SelectEntity):
     _attr_name = "RGB Effect"
     _attr_has_entity_name = True
     _attr_options = list(RGB_EFFECTS.keys())
@@ -177,48 +152,37 @@ class PironmanRGBEffect(SelectEntity):
         coordinator,
         entry_id,
     ):
-        self.coordinator = coordinator
+        super().__init__(coordinator)
+
         self._attr_unique_id = f"{entry_id}_rgb_effect"
 
     @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "Pironman 5 Max",
-            "manufacturer": "SunFounder",
-            "model": "Pironman 5 Max",
-        }
-
-    @property
-    def available(self) -> bool:
-        return self.coordinator.last_update_success
-
-    @property
     def current_option(self):
-        style = self.coordinator.data.get("rgb_style")
+        style = self.coordinator.data.get(
+            "rgb_style"
+        )
+
         reverse = {
             value: key
             for key, value in RGB_EFFECTS.items()
         }
+
         return reverse.get(style)
 
     async def async_select_option(self, option):
         await self.coordinator.post(
             "set-rgb-style",
-            {
-                "style": RGB_EFFECTS[option],
-            },
+            {"style": RGB_EFFECTS[option]},
         )
 
-        await self.coordinator.async_request_refresh()
 
-
-class PironmanOLEDRotation(SelectEntity):
-    """Represent the Pironman OLED rotation."""
-
+class PironmanOLEDRotation(PironmanEntity, SelectEntity):
     _attr_name = "OLED Rotation"
     _attr_has_entity_name = True
-    _attr_options = ["0°", "180°"]
+    _attr_options = [
+        "0°",
+        "180°",
+    ]
     _attr_icon = "mdi:rotate-3d-variant"
 
     def __init__(
@@ -226,18 +190,11 @@ class PironmanOLEDRotation(SelectEntity):
         coordinator,
         entry_id,
     ):
-        self.coordinator = coordinator
-        self.oled = PironmanOLED(coordinator)
-        self._attr_unique_id = f"{entry_id}_oled_rotation"
+        super().__init__(coordinator)
 
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "Pironman 5 Max",
-            "manufacturer": "SunFounder",
-            "model": "Pironman 5 Max",
-        }
+        self.oled = PironmanOLED(coordinator)
+
+        self._attr_unique_id = f"{entry_id}_oled_rotation"
 
     @property
     def current_option(self):
@@ -248,21 +205,16 @@ class PironmanOLEDRotation(SelectEntity):
 
         return f"{rotation}°"
 
-    @property
-    def available(self) -> bool:
-        return self.coordinator.last_update_success
-
     async def async_select_option(self, option):
-        await self.oled.set_rotation(
-            int(option.rstrip("°"))
+        rotation = int(
+            option.rstrip("°")
         )
 
+        await self.oled.set_rotation(rotation)
         await self.coordinator.async_request_refresh()
 
 
-class PironmanOLEDPage(SelectEntity):
-    """Represent the primary Pironman OLED page."""
-
+class PironmanOLEDPage(PironmanEntity, SelectEntity):
     _attr_name = "OLED Page"
     _attr_has_entity_name = True
     _attr_options = list(OLED_PAGES.keys())
@@ -273,22 +225,11 @@ class PironmanOLEDPage(SelectEntity):
         coordinator,
         entry_id,
     ):
-        self.coordinator = coordinator
+        super().__init__(coordinator)
+
         self.oled = PironmanOLED(coordinator)
+
         self._attr_unique_id = f"{entry_id}_oled_page"
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "Pironman 5 Max",
-            "manufacturer": "SunFounder",
-            "model": "Pironman 5 Max",
-        }
-
-    @property
-    def available(self) -> bool:
-        return self.coordinator.last_update_success
 
     @property
     def current_option(self):
@@ -305,14 +246,12 @@ class PironmanOLEDPage(SelectEntity):
         if not pages:
             return None
 
-        page = pages[0]
-
         reverse = {
             value: key
             for key, value in OLED_PAGES.items()
         }
 
-        return reverse.get(page)
+        return reverse.get(pages[0])
 
     async def async_select_option(self, option):
         pages = list(
@@ -338,5 +277,4 @@ class PironmanOLEDPage(SelectEntity):
         pages[0] = OLED_PAGES[option]
 
         await self.oled.set_pages(pages)
-
         await self.coordinator.async_request_refresh()

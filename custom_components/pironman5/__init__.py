@@ -1,8 +1,10 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .coordinator import PironmanCoordinator
+
+type PironmanConfigEntry = ConfigEntry[PironmanCoordinator]
+
 
 PLATFORMS = [
     "sensor",
@@ -14,22 +16,21 @@ PLATFORMS = [
 ]
 
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-):
-    hass.data.setdefault(DOMAIN, {})
-
+    entry: PironmanConfigEntry,
+) -> bool:
+    """Set up Pironman 5 from a config entry."""
     coordinator = PironmanCoordinator(
         hass,
+        entry,
         entry.data["host"],
         entry.data["port"],
     )
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
@@ -41,14 +42,10 @@ async def async_setup_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-):
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    entry: PironmanConfigEntry,
+) -> bool:
+    """Unload Pironman 5."""
+    return await hass.config_entries.async_unload_platforms(
         entry,
         PLATFORMS,
     )
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok

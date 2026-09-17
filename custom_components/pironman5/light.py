@@ -1,9 +1,9 @@
 from homeassistant.components.light import (
-    LightEntity,
     ColorMode,
+    LightEntity,
 )
 
-from .const import DOMAIN
+from .entity import PironmanEntity
 
 
 RGB_STYLES = [
@@ -22,7 +22,7 @@ async def async_setup_entry(
     entry,
     async_add_entities,
 ):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [
@@ -34,30 +34,30 @@ async def async_setup_entry(
     )
 
 
-class PironmanRGBLight(LightEntity):
+class PironmanRGBLight(PironmanEntity, LightEntity):
     _attr_name = "RGB"
     _attr_has_entity_name = True
     _attr_supported_color_modes = {
         ColorMode.RGB
     }
     _attr_color_mode = ColorMode.RGB
-    def __init__(self, coordinator, entry_id):
-        self.coordinator = coordinator
-        self._attr_unique_id = f"{entry_id}_rgb"
 
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "Pironman 5 Max",
-            "manufacturer": "SunFounder",
-            "model": "Pironman 5 Max",
-        }
+    def __init__(
+        self,
+        coordinator,
+        entry_id,
+    ):
+        super().__init__(coordinator)
+
+        self._attr_unique_id = f"{entry_id}_rgb"
 
     @property
     def is_on(self):
         return bool(
-            self.coordinator.data.get("rgb_enable", True)
+            self.coordinator.data.get(
+                "rgb_enable",
+                True,
+            )
         )
 
     @property
@@ -66,7 +66,10 @@ class PironmanRGBLight(LightEntity):
             "rgb_brightness",
             100,
         )
-        return round(brightness * 255 / 100)
+
+        return round(
+            brightness * 255 / 100
+        )
 
     @property
     def rgb_color(self):
@@ -74,6 +77,7 @@ class PironmanRGBLight(LightEntity):
             "rgb_color",
             "#ffffff",
         )
+
         color = color.lstrip("#")
 
         if len(color) != 6:

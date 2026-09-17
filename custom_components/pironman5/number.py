@@ -3,7 +3,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 
-from .const import DOMAIN
+from .entity import PironmanEntity
 from .oled import PironmanOLED
 
 
@@ -12,7 +12,7 @@ async def async_setup_entry(
     entry,
     async_add_entities,
 ):
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [
@@ -28,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-class PironmanRGBSpeed(NumberEntity):
+class PironmanRGBSpeed(PironmanEntity, NumberEntity):
     _attr_name = "RGB Effect Speed"
     _attr_has_entity_name = True
     _attr_native_min_value = 0
@@ -37,18 +37,14 @@ class PironmanRGBSpeed(NumberEntity):
     _attr_native_unit_of_measurement = "%"
     _attr_mode = NumberMode.SLIDER
 
-    def __init__(self, coordinator, entry_id):
-        self.coordinator = coordinator
-        self._attr_unique_id = f"{entry_id}_rgb_speed"
+    def __init__(
+        self,
+        coordinator,
+        entry_id,
+    ):
+        super().__init__(coordinator)
 
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "Pironman 5 Max",
-            "manufacturer": "SunFounder",
-            "model": "Pironman 5 Max",
-        }
+        self._attr_unique_id = f"{entry_id}_rgb_speed"
 
     @property
     def native_value(self):
@@ -60,15 +56,14 @@ class PironmanRGBSpeed(NumberEntity):
     async def async_set_native_value(self, value):
         await self.coordinator.post(
             "set-rgb-speed",
-            {
-                "speed": int(value)
-            },
+            {"speed": int(value)},
         )
 
 
-class PironmanOLEDSleepTimeout(NumberEntity):
-    """Represent the Pironman OLED sleep timeout."""
-
+class PironmanOLEDSleepTimeout(
+    PironmanEntity,
+    NumberEntity,
+):
     _attr_name = "OLED Sleep Timeout"
     _attr_has_entity_name = True
     _attr_native_min_value = 0
@@ -78,19 +73,16 @@ class PironmanOLEDSleepTimeout(NumberEntity):
     _attr_mode = NumberMode.BOX
     _attr_icon = "mdi:timer-outline"
 
-    def __init__(self, coordinator, entry_id):
-        self.coordinator = coordinator
-        self.oled = PironmanOLED(coordinator)
-        self._attr_unique_id = f"{entry_id}_oled_sleep_timeout"
+    def __init__(
+        self,
+        coordinator,
+        entry_id,
+    ):
+        super().__init__(coordinator)
 
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": "Pironman 5 Max",
-            "manufacturer": "SunFounder",
-            "model": "Pironman 5 Max",
-        }
+        self.oled = PironmanOLED(coordinator)
+
+        self._attr_unique_id = f"{entry_id}_oled_sleep_timeout"
 
     @property
     def native_value(self):
@@ -99,10 +91,9 @@ class PironmanOLEDSleepTimeout(NumberEntity):
             10,
         )
 
-    @property
-    def available(self) -> bool:
-        return self.coordinator.last_update_success
-
     async def async_set_native_value(self, value):
-        await self.oled.set_sleep_timeout(int(value))
+        await self.oled.set_sleep_timeout(
+            int(value)
+        )
+
         await self.coordinator.async_request_refresh()
